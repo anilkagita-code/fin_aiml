@@ -1,0 +1,45 @@
+//© Sergey Buzz - Mastering TradingView Pine Script v5
+
+//@version=5
+strategy("RSI Strategy", overlay = false, default_qty_type=strategy.percent_of_equity, initial_capital=1000, default_qty_value=100, commission_type=strategy.commission.percent, commission_value=0.1)
+
+StartDay = input.int(title="Start Day", defval=1)
+StartMonth = input.int(title="Start Month", defval=1)
+StartYear = input.int(title="Start Year", defval=2010)
+
+EndDay = input.int(title="End Day", defval=1)
+EndMonth = input.int(title="End Month", defval=1)
+EndYear = input.int(title="End Year", defval=2024)
+
+TimeStart = timestamp(StartYear, StartMonth, StartDay, 0, 0)
+TimeEnd = timestamp(EndYear, EndMonth, EndDay, 0, 0)
+
+IsTimeEnabled() =>
+    time >= TimeStart and time <= TimeEnd ? true : false
+
+rsiPeriod = input.int(14, "RSI Period")
+
+rsiOversold = input.int(30, "RSI Oversold Level", step = 5)
+
+rsiOverbought = input.int(70, "RSI Overbought Level", step = 5)
+
+//Calculate RSI
+rsiValue = ta.rsi(close, rsiPeriod)
+
+//Generate buy signal
+if (IsTimeEnabled() and rsiValue < rsiOversold)
+    strategy.entry("Buy", strategy.long)
+
+//Generate sell short signal
+if (IsTimeEnabled() and rsiValue > rsiOverbought)
+    strategy.close("Buy")
+
+//Draw RSI indicator
+plot(rsiValue, "RSI", color.green)
+
+//Add horizontal line for RSI indicator
+hline(50, "Middle Line", color.gray, hline.style_solid)
+hline(rsiOverbought, "Overbought Line", color.red)
+hline(rsiOversold, "Oversold Line", color.green)
+    
+
