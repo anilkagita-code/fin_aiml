@@ -1,0 +1,56 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Dynamictradingstrategies
+
+//@version=5
+strategy("BBW TRADING  STRATEGY",overlay = true)
+
+/////// USER INPUTS 
+
+SMA_L = input.int(20,"SMA LENGTH")
+MULTI = input.float(2,"MULTI")
+
+DI_L = input.int(14,"DI LENGTH")
+ADX_L = input.int(14,"ADX LENGTH")
+
+EMA_L_KC = input.int(20,"KC SMA LENGTH")
+MULTI_KC = input.float(1.5,"MULTI KC")
+
+FAST = input.int(12,"FAST")
+SLOW = input.int(26,"SLOW")
+SIGNAL = input.int(9,"SIGNAL")
+
+
+
+
+
+///// TRADING INIDCATORS 
+
+[diplus, diminus, adx] = ta.dmi(DI_L, ADX_L)
+[middle, upper, lower] = ta.kc(close, EMA_L_KC, MULTI_KC)
+[macdLine, signalLine, histLine] = ta.macd(close, FAST, SLOW, SIGNAL)
+BBW = ta.bbw(close,SMA_L,MULTI)
+
+
+//// BUY AND SELL CONDITION
+
+
+buy = BBW < 0.02 and ta.crossover(close,upper) and macdLine > 0 and adx > 25
+short = BBW < 0.02 and ta.crossunder(close,lower) and macdLine < 0 and adx > 25
+
+sell =  ta.crossunder(close,middle)
+cover  =  ta.crossover(close,middle)
+
+////STRATEGY
+
+if buy
+    strategy.entry("long", direction = strategy.long,comment = "LONG")
+
+if sell
+    strategy.close("long", comment = "SELL")
+
+
+if short
+    strategy.entry("short", direction = strategy.short,comment = "SHORT")
+
+if cover
+    strategy.close("short", comment = "COVER")

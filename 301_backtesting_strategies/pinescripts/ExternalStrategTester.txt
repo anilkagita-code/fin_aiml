@@ -1,0 +1,53 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © pAulseperformance
+
+//@version=5
+strategy('External Strategy Tester', overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=20, initial_capital=100000, currency='USD', slippage=3, commission_type=strategy.commission.percent, commission_value=0.1, process_orders_on_close=true)
+
+
+// Inputs
+i_externalSource    = input(close, title='External Source', group="Signal Detection")
+
+//Trinomial Signals
+i_useLongSignal     = input(true, "", inline="LS", group="Signal Detection")
+i_longSignal        = input(1, 'Long Signal', inline="LS", group="Signal Detection") 
+i_useShortSignal    = input(true, "", inline="SS", group="Signal Detection")
+i_shortSignal       = input(-1, 'Short Signal',inline="SS", group="Signal Detection")
+i_useExitSignal     = input(true, "", inline="ES", group="Signal Detection")
+i_exitSignal        = input(0, 'Exit Signal',inline="ES", group="Signal Detection")
+
+// Date Filter
+i_useDateFilter     = input(false, "Date Filter", group="Date Filter")
+i_startTime         = input.time(defval=timestamp('01 Jan 2020 00:00 +0000'), title='Start Time', group="Date Filter")
+i_endTime           = input.time(defval=timestamp('27 Nov 2020 00:00 +0000'), title='End Time',  group="Date Filter")
+inDateRange         = i_useDateFilter ? time >= i_startTime and time <= i_endTime : true
+
+// Strategy
+i_direction         = input.string('all', title='Trade Direction', options=['all', 'long', 'short'], group="Strategy")
+strategy.risk.allow_entry_in(i_direction)
+i_reverse           = input(false, title='Reverse Strategy', group="Strategy")  // Useful if you want to see how the strategy might perform when using the oppsite logic to enter and exit trades
+
+
+
+
+
+stratLong           = i_useLongSignal  ? (i_externalSource == (i_reverse ? i_shortSignal : i_longSignal) and inDateRange) : na
+stratShort          = i_useShortSignal ? (i_externalSource == (i_reverse ? i_longSignal  : i_shortSignal) and inDateRange) : na
+stratExit           = i_useExitSignal  ? (i_externalSource == i_exitSignal and inDateRange) : na
+
+
+
+
+
+if stratLong 
+    strategy.entry('Buy', direction=strategy.long)
+
+
+if stratShort
+    strategy.entry('Sell', direction=strategy.short)
+
+if stratExit
+    strategy.close_all()
+
+
+plot(i_externalSource, style=plot.style_cross)

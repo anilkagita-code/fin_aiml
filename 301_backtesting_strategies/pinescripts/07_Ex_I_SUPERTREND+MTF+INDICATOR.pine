@@ -1,0 +1,27 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Dynamictradingstrategies
+
+//@version=5
+indicator("ADVANCE SUPERTREND MTF - UDEMY ")
+
+ATRLENGTH = input.int(title= "ATR LENGTH", defval = 10, group = "SUPERTREND SETTINGS", inline = "1")
+FACTOR = input.float(title= "FACTOR", defval = 3,group = "SUPERTREND SETTINGS", inline = "1")
+
+[supertrend, direction] = ta.supertrend(FACTOR, ATRLENGTH)
+
+
+ST_HTF = input.timeframe(defval = "30", title = "SUPERTREND HTF",group = "SUPERTREND MULTI-TIMEFRAME SETTINGS", inline = "1")
+ST_MTF = input.timeframe(defval = "15", title = "SUPERTREND MTF",group = "SUPERTREND MULTI-TIMEFRAME SETTINGS", inline = "1")
+ST_STF = input.timeframe(defval = "5", title = "SUPERTREND MTF",group = "SUPERTREND MULTI-TIMEFRAME SETTINGS", inline = "1")
+
+
+nonRepaintingSecurity(sym, tf, src) =>
+    request.security(sym, tf, src[barstate.isrealtime ? 1 : 0])[barstate.isrealtime ? 0 : 1]
+
+supertrend_30  = nonRepaintingSecurity(syminfo.tickerid, ST_HTF, direction)
+supertrend_15  = nonRepaintingSecurity(syminfo.tickerid, ST_MTF, direction)
+supertrend_5   = nonRepaintingSecurity(syminfo.tickerid, ST_STF, direction)
+
+plot(1, color = supertrend_5 == -1  ? color.green :  supertrend_5 == 1 ? color.red : na, linewidth = 7 )
+plot(0, color = supertrend_15 == -1  ? color.green : supertrend_15 == 1 ? color.red : na , linewidth = 7 )
+plot(-1, color = supertrend_30 == -1  ? color.green : supertrend_30 == 1 ? color.red : na , linewidth = 7)

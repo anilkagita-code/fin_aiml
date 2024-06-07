@@ -1,0 +1,66 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © tradingverge.com
+
+//@version=5
+strategy("TRIPLE SUPERTREND TRADING STRATEGY UDEMY V1", overlay = true)
+
+///// USER INPUTS
+
+ATR_L1 = input.int(defval = 10, title = "ATR LENGTH 1 ")
+FACTOR1 = input.float(defval = 3, title = "FACTOR 1")
+
+ATR_L2 = input.int(defval = 10, title = "ATR LENGTH 2 ")
+FACTOR2 = input.float(defval = 2, title = "FACTOR 2 ")
+
+ATR_L3 = input.int(defval = 10, title = "ATR LENGTH 3 ")
+FACTOR3 = input.float(defval = 1, title = "FACTOR 3 ")
+
+///// 
+
+EXIT_ATR_1 = input.int(defval = 10, title = "EXIT ATR LENGTH")
+EXIT_FACTOR_1 = input.float(defval = 1, title = "EXIT ATR LENGTH")
+
+////// TRADING INDICATOR 
+
+[supertrend1, direction1] = ta.supertrend(FACTOR1, ATR_L1)
+[supertrend2, direction2] = ta.supertrend(FACTOR2, ATR_L2)
+[supertrend3, direction3] = ta.supertrend(FACTOR3, ATR_L3)
+
+[supertrendEX, directionEX] = ta.supertrend(EXIT_FACTOR_1, EXIT_ATR_1)
+
+
+/////// BUY AND SHORT SIGNALS 
+
+buy = close > supertrend1 and close > supertrend2 and close > supertrend3
+short = close < supertrend1 and close < supertrend2 and close < supertrend3
+
+sell = ta.crossunder(close,supertrendEX)
+cover = ta.crossover(close,supertrendEX)
+
+
+////// BUILDING STRATEGY 
+
+if buy
+    strategy.entry("LONG", direction = strategy.long, comment = "LONG")
+
+if sell
+    strategy.close("LONG", comment = "BUYEXIT")
+
+
+if short
+    strategy.entry("SHORT", direction = strategy.short, comment = "SHORT")
+
+if cover
+    strategy.close("SHORT", comment = "SHORTEXIT")
+
+
+
+//// PLOTTING OF SUPERTREND
+
+plot(direction1 == -1 ? supertrend1 : na, color = color.green, style = plot.style_linebr, linewidth = 1)
+plot(direction2 == -1 ? supertrend2 : na, color = color.green, style = plot.style_linebr, linewidth = 1)
+plot(direction3 == -1 ? supertrend3 : na, color = color.green, style = plot.style_linebr, linewidth = 1)
+
+plot(direction1 == 1 ? supertrend1 : na, color = color.red, style = plot.style_linebr, linewidth = 1)
+plot(direction2 == 1 ? supertrend2 : na, color = color.red, style = plot.style_linebr, linewidth = 1)
+plot(direction3 == 1 ? supertrend3 : na, color = color.red, style = plot.style_linebr, linewidth = 1)

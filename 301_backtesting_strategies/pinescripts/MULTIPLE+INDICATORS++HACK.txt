@@ -1,0 +1,209 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Dynamictradingstrategies
+
+//@version=5
+indicator("OVERLAY INDICATORS ALL IN ONE SWITCH", overlay = true)
+
+BB_ON = input.bool(true, title = "SHOW BOLLINGER BANDS INDICATOR" )
+KC_ON = input.bool(false, title = "SHOW KELTNER CHANNEL INDICATOR" )
+Supertrend_ON = input.bool(false, title = "SHOW SUPERTREND INDICATOR" )
+VWAP_ON = input.bool(false, title = "SHOW VWAP INDICATOR" )
+VWMA_ON = input.bool(false, title = "SHOW VWMA INDICATOR" )
+WMA_ON = input.bool(false, title = "SHOW WMA INDICATOR" )
+SMA_ON = input.bool(false, title = "SHOW SMA INDICATOR" )
+HMA_ON = input.bool(false, title = "SHOW HMA INDICATOR" )
+EMA_ON = input.bool(false, title = "SHOW EMA INDICATOR" )
+DCBANDS_ON = input.bool(false, title = "SHOW DCBANDS INDICATOR" )
+DUALBB_ON = input.bool(false, title = "SHOW DUALBB_ON INDICATOR", tooltip = "BB1 = (20,2)....BB2 = (20,1)")
+
+
+SWMA_ON = input.bool(false, title = "SHOW SWMA INDICATOR", tooltip = "Symmetrical Moving Average" )
+PSAR_ON = input.bool(false, title = "SHOW PSAR INDICATOR" )
+DEMA_ON = input.bool(false, title = "SHOW DEMA INDICATOR" )
+TEMA_ON = input.bool(false, title = "SHOW TEMA INDICATOR" )
+EMABANDS_ON = input.bool(false, title = "SHOW EMABANDS INDICATOR" )
+ICHIMOKU_ON = input.bool(false, title = "SHOW ICHIMOKU INDICATOR" )
+KAMA_ON = input.bool(false, title = "SHOW KAMA INDICATOR" )
+
+VWAP_BAND_ON = input.bool(false, title = "SHOW VWAP BANDS INDICATOR" )
+
+
+SQUEEZE_ON = input.bool(false, title = "SHOW SQUEEZE_ON", tooltip = "BOLLINER BANDS ARE INSIDE OF KELTNER CHANNEL" )
+ADX_VOL_ON = input.bool(false, title = "SHOW ADX ON", tooltip = "ADX > 20 AND ADX GREATER THAN PERVIOUS PERIOD ADX - candle-color-green, candle-color-gray = LOW VOLATILITY" )
+KAMA_SIGNAL_ON = input.bool(false, title = "SHOW KAMA SIGNAL", tooltip = "IF KAMA IS RISING THEN CANDLE COLOR WILL BE GREEN and IF KAMA IS FALLING CANDLE COLOR WILL BE RED AND IF KAMA IS FLAT CANDLE COLOR WILL BE GRAY" )
+
+/// INPUT CONTROL 
+
+BB_SMA_L = input.int(title = "SMA L1", defval = 20, minval = 1, maxval = 200,  step = 1, group = "BOLLINGER BAND SETTINGS", inline = "1")
+MULTI = input.float(title = "MULTI 1", defval = 2, minval = 0.5, maxval = 200,  step = 0.5,group = "BOLLINGER BAND SETTINGS", inline = "1")
+
+BB_SMA_L2 = input.int(title = "SMA L2", defval = 20, minval = 1, maxval = 200,  step = 1,group = "BOLLINGER BAND 2 SETTINGS", inline = "1")
+MULTI2 = input.float(title = "MULTI 2", defval = 1, minval = 0.5, maxval = 200,  step = 0.5,group = "BOLLINGER BAND 2 SETTINGS", inline = "1")
+
+KC_EMA_L = input.int(title = "KC EMA LENGTH", defval = 20, minval = 1, maxval = 200,  step = 1,group = "KELTNER CHANNEL SETTINGS", inline = "1")
+KC_MULTI = input.float(title = "KC MULTI", defval = 1.5, minval = 0.5, maxval = 200,  step = 0.5,group = "KELTNER CHANNEL SETTINGS", inline = "1")
+
+length_vwma = input.int(title = "VWMA LENGTH", defval = 21, minval = 1, maxval = 200,  step = 1,group = "VWMA SETTINGS", inline = "1")
+length_WMA = input.int(title = "LENGTH WMA", defval = 21, minval = 1, maxval = 200,  step = 1,group = "WMA SETTINGS", inline = "1")
+length_SMA = input.int(title = "LENGTH SMA", defval = 21, minval = 1, maxval = 200,  step = 1,group = "SMA SETTINGS", inline = "1")
+length_HMA = input.int(title = "LENGTH HMA", defval = 21, minval = 1, maxval = 200,  step = 1,group = "HMA SETTINGS", inline = "1")
+length_EMA = input.int(title = "LENGTH EMA", defval = 21, minval = 1, maxval = 200,  step = 1,group = "EMA SETTINGS", inline = "1")
+length_SWMA = input.int(title = "LENGTH SWMA", defval = 21, minval = 1, maxval = 200,  step = 1,group = "SWMA SETTINGS", inline = "1")
+length_DEMA = input.int(title = "LENGTH DEMA", defval = 21, minval = 1, maxval = 200,  step = 1,group = "DEMA SETTINGS", inline = "1")
+length_TEMA = input.int(title = "LENGTH TEMA", defval = 21, minval = 1, maxval = 200,  step = 1,group = "TEMA SETTINGS", inline = "1")
+
+DI_LENGTH = input.int(title = "DI LENGTH", defval = 14, minval = 1, maxval = 200, step = 1,group = "DMI SETTINGS", inline = "1")
+ADX_L = input.int(title = "ADX LENGTH", defval = 14, minval = 1, maxval = 200, step = 1,group = "DMI SETTINGS", inline = "1")
+
+EMA_UP_L= input.int(title = "EMA HIGH", defval = 20, minval = 1, maxval = 200,  step = 1,group = "EMA BANDS SETTINGS", inline = "1")
+EMA_DO_L = input.int(title = "EMA LOW", defval = 20, minval = 1, maxval = 200,  step = 1,group = "EMA BANDS SETTINGS", inline = "1")
+
+
+ATR_L_ST = input.int(title = "ATR LENGTH", defval = 20, minval = 1, maxval = 200,  step = 1,group = "SUPERTREND SETTINGS", inline = "1")
+MULTI_ST = input.float(title = "MULTI", defval =3 , minval = 0.5, maxval = 200,  step = 0.5,group = "SUPERTREND SETTINGS", inline = "1")
+
+VWAP_LENGTH = input.int(title = "VWAP LENGTH", defval = 21, minval = 1, maxval = 200,  step = 1,group = "VWAP BANDS SETTINGS", inline = "1")
+VWAP_MULTI = input.float(title = "VWAP MULTI", defval = 2, minval = 1, maxval = 200,  step = 0.5,group = "VWAP BANDS SETTINGS", inline = "1")
+
+
+
+/// TRADING INDICATORS
+
+[middle_bb, upper_bb, lower_bb] = ta.bb(close, BB_SMA_L, MULTI)
+
+[middle_bb2, upper_bb2, lower_bb2] = ta.bb(close, BB_SMA_L2, MULTI2)
+
+
+[middlekc, upperkc, lowerkc] = ta.kc(close, KC_EMA_L, KC_MULTI)
+[supertrend, direction] = ta.supertrend(MULTI_ST, ATR_L_ST)
+VWAP = ta.vwap(close)
+VWMA = ta.vwma(close, length_vwma)
+WMA = ta.wma(close, length_WMA)
+SMA = ta.sma(close, length_SMA)
+HMA = ta.hma(close, length_HMA)
+EMA = ta.ema(close,length_EMA)
+SWMA = ta.swma(close)
+PSAR = ta.sar(0.02, 0.02, 0.2) 
+
+//////////////// KAUFFMAN ADAPTIVE MOVING AVERAGE 
+
+length_kama = input.int(title='KAMA LENGTH', defval=10,group = "KAMA SETTINGS", inline = "1")
+fast_Length = input.int(title='FAST EMA LENGTH', defval=2,group = "KAMA SETTINGS", inline = "1")
+slow_Length = input.int(title='SLOW EMA LENGTH', defval=30,group = "KAMA SETTINGS", inline = "2")
+source = input.source(title='SOURCE', defval=close,group = "KAMA SETTINGS", inline = "2")
+
+mom = math.abs(ta.change(source, length_kama))
+volatility = math.sum(math.abs(ta.change(source)), length_kama)
+
+// Efficiency Ratio
+er = volatility != 0 ? mom / volatility : 0
+
+fastAlpha = (2 / (fast_Length + 1))
+slowAlpha = (2 / (slow_Length + 1))
+
+alpha = math.pow(er * (fastAlpha - slowAlpha) + slowAlpha, 2)
+
+kama = 0.0
+kama := alpha * source + (1 - alpha) * nz(kama[1], source)
+
+
+//////////////////////////////////////////////////
+
+RSI = ta.rsi(close,14)
+[diplus, diminus, adx] = ta.dmi(DI_LENGTH, ADX_L)
+ATR = ta.atr(14)
+[macdLine, signalLine, hist] = ta.macd(close, 12, 26, 9)
+EMA_ATR1 = ta.ema(ATR,13)
+EMA_ATR2 = ta.ema(ATR,34)
+
+////// DEMA ////////
+
+EMA_L = input.int(title = "DEMA LENGTH", defval = 20, minval = 1, maxval = 100, step = 1,group = "DEMA SETTINGS", inline = "1")
+EMA1 = ta.ema(close,EMA_L)
+EMA_EMA1 = ta.ema(EMA1,EMA_L)
+DEMA = (2 * EMA1) - EMA_EMA1
+
+///////// TEMA /////////
+
+length = input.int(9, minval=1,group = "TEMA SETTINGS", inline = "1",title = "TEMA LENGTH")
+ema1 = ta.ema(close, length)
+ema2 = ta.ema(ema1, length)
+ema3 = ta.ema(ema2, length)
+TEMA = 3 * (ema1 - ema2) + ema3
+
+///////////////// VWAP BANDS //////////////////////
+
+upperband = VWAP + (ta.stdev(VWAP,VWAP_LENGTH) * VWAP_MULTI)
+lowerband = VWAP - (ta.stdev(VWAP,VWAP_LENGTH) * VWAP_MULTI)
+
+///////////////////////////////// MA BANDS  //////////
+
+ema_up = ta.ema(high,EMA_UP_L)
+ema_down = ta.ema(low,EMA_DO_L)
+
+//////////////// LEMA///////
+
+linreg = ta.linreg(close,20,0)
+ema_linreg = ta.ema(linreg,20)
+
+/////////// DONCHAIN CHANNEL //////////////////////
+
+length_DC = input.int(20, minval=1,group = "DONCHIAN CHANNEL SETTINGS", inline = "1", title = "DONCHIAN LENGTH")
+lower_DC = ta.lowest(length_DC)
+upper_DC = ta.highest(length_DC)
+basis_DC = math.avg(upper_DC, lower_DC)
+
+////////////////ACT AS TRADING SIGNALS /////////////////
+
+SQUEEZE = (upper_bb < upperkc and lower_bb > lowerkc) ? color.new(color.gray,0) : color.new(color.blue,0)
+ADX_VS = (adx > adx[1] and adx > 20) ? color.new(color.blue,0) : color.new(color.gray,0) 
+KAMA_SIGNAL = kama > kama[1] ? color.new(color.green,0) : kama < kama[1] ? color.new(color.red,0) : color.new(color.gray,0)
+
+
+//////////////////////
+
+plot(BB_ON ? middle_bb : na, title = "middle_bb", color = color.new(color.red,0), linewidth = 1)
+plot(BB_ON ? upper_bb : na, title = "upper_bb", color = color.new(color.white,0), linewidth = 1)
+plot(BB_ON ? lower_bb : na, title = "lower_bb", color = color.new(color.white,0), linewidth = 1)
+
+plot(KC_ON ? middlekc : na, title = "middlekc", color = color.new(color.red,0), linewidth = 1)
+plot(KC_ON ? upperkc : na, title = "upperkc", color = color.new(color.white,0), linewidth = 1)
+plot(KC_ON ? lowerkc : na, title = "lowerkc", color = color.new(color.white,0), linewidth = 1)
+
+plot(Supertrend_ON ? supertrend : na, title = "Supertrend_on", color = direction == -1 ? color.new(color.green,0) : color.new(color.red,0), linewidth = 1)
+
+plot(VWAP_ON ? VWAP : na, title = "VWAP", color = color.new(color.blue,0), linewidth = 1)
+plot(VWMA_ON ? VWMA : na, title = "VWMA", color = color.new(color.blue,0), linewidth = 1)
+plot(WMA_ON ? WMA : na, title = "WMA", color = color.new(color.red,0), linewidth = 1)
+plot(SMA_ON ? SMA : na, title = "SMA", color = color.new(color.green,0), linewidth = 1)
+plot(HMA_ON ? HMA : na, title = "SMA", color = color.new(color.aqua,0), linewidth = 1)
+plot(EMA_ON ? EMA : na, title = "EMA", color = color.new(color.lime,0), linewidth = 1)
+
+plot(VWAP_BAND_ON ? upperband : na)
+plot(VWAP_BAND_ON ? lowerband : na)
+
+plot(SWMA_ON ? SWMA : na, title = "SWMA", color = color.new(color.yellow,0), linewidth = 1)
+plot(PSAR_ON ? PSAR : na, title = "PSAR", color = color.new(color.white,0), linewidth = 1, style = plot.style_circles)
+plot(DEMA_ON ? DEMA : na, title = "DEMA", color = color.new(color.red,0), linewidth = 1)
+plot(TEMA_ON ? TEMA : na, title = "TEMA", color = color.new(color.silver,0), linewidth = 1)
+
+plot(EMABANDS_ON ? ema_up : na, title = "ema_up", color = color.new(color.green,0), linewidth = 1)
+plot(EMABANDS_ON ? ema_down : na, title = "ema_down", color = color.new(color.red,0), linewidth = 1)
+
+plot(DCBANDS_ON ? lower_DC : na, title = "lower_DC", color = color.new(color.red,0), linewidth = 1)
+plot(DCBANDS_ON ? upper_DC : na, title = "upper_DC", color = color.new(color.white,0), linewidth = 1)
+plot(DCBANDS_ON ? basis_DC : na, title = "basis_DC", color = color.new(color.white,0), linewidth = 1)
+plot(KAMA_ON ? kama : na, color=kama > kama[1] ? color.new(color.green, 0) : color.new(color.red, 0), title = "KAMA")
+
+plot(DUALBB_ON ? middle_bb : na, title = "ema_down", color = color.new(color.red,0), linewidth = 1)
+plot(DUALBB_ON ? upper_bb : na, title = "ema_down", color = color.new(color.white,0), linewidth = 1)
+plot(DUALBB_ON ? lower_bb : na, title = "ema_down", color = color.new(color.white,0), linewidth = 1)
+plot(DUALBB_ON ? middle_bb2 : na, title = "middle_bb2", color = color.new(color.red,0), linewidth = 1)
+plot(DUALBB_ON ? upper_bb2 : na, title = "upper_bb2", color = color.new(color.white,0), linewidth = 1)
+plot(DUALBB_ON ? lower_bb2 : na, title = "lower_bb2", color = color.new(color.white,0), linewidth = 1)
+
+
+barcolor(SQUEEZE_ON ? SQUEEZE : na, title = "SQUEEZE")
+barcolor(ADX_VOL_ON ? ADX_VS  : na, title = "ADX_VOLATILITY_DETECTION")
+barcolor(KAMA_SIGNAL_ON ? KAMA_SIGNAL : na, title = "KAMA_SIGNAL_ON")
+

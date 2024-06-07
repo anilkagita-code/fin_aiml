@@ -1,0 +1,19 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © pAulseperformance
+
+//@version=5
+indicator("Really Complicated script", overlay=true)
+
+[superTrend, dir] = ta.supertrend(4, 14)
+colResistance = dir == 1 and dir == dir[1] ? color.new(color.red, 0) : color.new(color.red, 100)
+colSupport = dir == -1 and dir == dir[1] ? color.new(color.green, 0) : color.new(color.green, 100)
+
+buy  = ta.change(dir) < 0
+sell = ta.change(dir) > 0
+
+signal = buy ? 1 : sell ? -1 : 0
+plot(signal, "Signal", color=na)
+plotshape(buy, "Buy", shape.labelup, location.belowbar, color.green, text="BUY", textcolor=color.white, size=size.normal)
+plotshape(sell, "Sell", shape.labeldown, location.abovebar, color.red, text="SELL", textcolor=color.white, size=size.normal)
+plot(superTrend, "up", color = colResistance, linewidth=2)
+plot(superTrend, "dn",color = colSupport, linewidth=2)

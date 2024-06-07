@@ -1,0 +1,143 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Dynamictradingstrategies
+
+//@version=5
+strategy("ADVANCE BOLLINGER BAND TRADING STRATEGIES", overlay = true)
+
+TGT_SL_TYPE = input.string("Percentage", options = ["Points", "Percentage"], group = "TARGET & STOPLOSS SETTINGS")
+
+
+///// INPUT CONTROLS
+
+len = input.int(14, minval=1, title="DI LENGTH", group = "DMI SETTINGS", inline = "1")
+lensig = input.int(14, title="ADX LENGTH", minval=1, maxval=50,group = "DMI SETTINGS", inline = "1")
+
+SMA_L = input.int(20, minval=1, title="SMA LENGTH",group = "BB SETTINGS", inline = "1")
+MULTI = input.float(2, title="MULTI", minval=1, maxval=50,group = "BB SETTINGS", inline = "1")
+
+EMA_L = input.int(20,"EMA LENGTH",group = "EMA SETTINGS", inline = "1")
+
+ADX_LEVEL = input.int(20, minval=1, title="ADX LEVEL", group = "DMI SETTINGS", inline = "1")
+
+////// LONG AND SHORT ONLY 
+
+LONGONLY = input.bool(defval = true, title =  "LONG ?" ,group = "LONGONLY & SHORTONLY SETTINGS", inline = "1")
+SHORTONLY = input.bool(defval = true, title =  "SHORT ?" ,group = "LONGONLY & SHORTONLY SETTINGS", inline = "1")
+
+//////////
+
+indicatoroption1 = input.bool(defval = true, title =  "ADX-BREAKOUT",group = "ADX SETTINGS", inline = "1")
+indicatoroption2 = input.bool(defval = true, title =  "ADX-FILTER",group = "ADX SETTINGS", inline = "1")
+
+NO_TARGET_STOPLOSS_LONG  = input.bool(defval = false, title =  "TARGET & STOPLOSS FOR LONG ?",group = "TARGET & STOPLOSS SETTINGS", inline = "1")
+NO_TARGET_STOPLOSS_SHORT = input.bool(defval = false, title =  "TARGET & STOPLOSS FOR SHORT ?",group = "TARGET & STOPLOSS SETTINGS", inline = "1")
+
+
+STOPLOSS_BUY_POINTS = input.int(50,  title="POINT BASED STOPLOSS - LONG",group = "POINT BASED TARGET & STOPLOSS SETTINGS", inline = "1")
+TARGET_BUY_POINTS   = input.int(100, title="POINT BASED TARGET - LONG",group = "POINT BASED TARGET & STOPLOSS SETTINGS", inline = "1")
+
+STOPLOSS_SHORT_POINTS = input.int(50, title="POINT BASED STOPLOSS - SHORT",group = "POINT BASED TARGET & STOPLOSS SETTINGS", inline = "1")
+TARGET_SHORT_POINTS   = input.int(100, title="POINT BASED TARGET - SHORT",group = "POINT BASED TARGET & STOPLOSS SETTINGS", inline = "1")
+
+STOPLOSS_BUY_PERCENTAGE = input.float(1, title="PERCENTAGE BASED STOPLOSS - LONG",group = "PERCENTAGE BASED TARGET & STOPLOSS SETTINGS", inline = "1")
+TARGET_BUY_PERCENTAGE  = input.float(2, title="PERCENTAGE BASED TARGET - LONG",group = "PERCENTAGE BASED TARGET & STOPLOSS SETTINGS", inline = "1")
+
+STOPLOSS_SHORT_PERCENTAGE = input.float(1,title="PERCENTAGE BASED STOPLOSS - SHORT",group = "PERCENTAGE BASED TARGET & STOPLOSS SETTINGS", inline = "1")
+TARGET_SHORT_PERCENTAGE   = input.float(2, title="PERCENTAGE BASED TARGET - SHORT",group = "PERCENTAGE BASED TARGET & STOPLOSS SETTINGS", inline = "1")
+
+
+
+
+
+//// TRADING INDICATORS 
+
+
+[middle, upper, lower] = ta.bb(close, SMA_L, MULTI)
+[diplus, diminus, adx] = ta.dmi(len, lensig)
+EMA = ta.ema(close,EMA_L) // 20 period EMA
+
+///// ADX FILTER 
+
+ADX_BREAKOUT = not indicatoroption1 or adx > ADX_LEVEL
+ADX_RISING = not indicatoroption2 or adx > adx[1]
+
+
+//// TRADING SIGNALS 
+
+buy = ta.crossover(close,upper) and ADX_BREAKOUT and ADX_RISING
+short = ta.crossunder(close,lower) and ADX_BREAKOUT and ADX_RISING
+
+sell = ta.crossunder(close,EMA)
+cover = ta.crossover(close,EMA)
+
+
+///// PERCENTAGE BASED TGT AND STOPLOSS 
+
+//// BUILDING TARGET AND STOPLOSS 
+
+
+var tgt_long = 0.0
+var tgt_short = 0.0
+
+var sl_long = 0.0
+var sl_short = 0.0
+
+
+if (TGT_SL_TYPE == "Percentage")
+    ///// LONG PERCENTAGE TGT AND STOPLOSS
+    tgt_long := (strategy.position_avg_price  * (1+(TARGET_BUY_PERCENTAGE/100)))
+    sl_long := (strategy.position_avg_price  * (1-(STOPLOSS_BUY_PERCENTAGE/100)))
+    /////// SHORT PERCENTAGE TARGET AND STOPLOSS
+    tgt_short := (strategy.position_avg_price  * (1-(STOPLOSS_SHORT_PERCENTAGE/100)))
+    sl_short := (strategy.position_avg_price  * (1+(TARGET_SHORT_PERCENTAGE/100)))
+
+
+/////// POINT BASED 
+
+if (TGT_SL_TYPE == "Points")
+    ///// LONG POINTS TGT AND STOPLOSS
+    tgt_long := (strategy.position_avg_price  + TARGET_BUY_POINTS)
+    sl_long := (strategy.position_avg_price  - STOPLOSS_BUY_POINTS)
+    /////// SHORT POINTS TARGET AND STOPLOSS
+    tgt_short := (strategy.position_avg_price  - TARGET_SHORT_POINTS)
+    sl_short := (strategy.position_avg_price  + STOPLOSS_SHORT_POINTS)
+
+
+//// STRATEGY FUNCTIONS 
+
+if LONGONLY
+    if buy
+        strategy.entry("long", direction = strategy.long, comment = "LONG")
+
+    if sell
+        strategy.close("long", comment = "BUYEXIT")
+
+    if strategy.position_size > 0 and NO_TARGET_STOPLOSS_LONG
+        strategy.exit("long", from_entry = "long", stop = sl_long , limit = tgt_long, comment_loss = "LOSS", comment_profit = "PROFIT")
+
+
+if SHORTONLY
+    if short
+        strategy.entry("short", direction = strategy.short, comment = "SHORT")
+
+    if cover
+        strategy.close("short", comment = "SHORTEXIT")
+
+    if strategy.position_size < 0 and NO_TARGET_STOPLOSS_SHORT
+        strategy.exit("short", from_entry = "short", stop = sl_short , limit = tgt_short, comment_loss = "LOSS", comment_profit = "PROFIT")
+
+
+//// PLOTTING TARGET AND STOPLOSSS
+
+plot(strategy.position_size > 0 and NO_TARGET_STOPLOSS_LONG ? sl_long : na, color = color.red, style = plot.style_linebr)
+plot(strategy.position_size > 0 and NO_TARGET_STOPLOSS_LONG ? tgt_long : na, color = color.green, style = plot.style_linebr)
+
+plot(strategy.position_size < 0 and NO_TARGET_STOPLOSS_SHORT ? sl_short : na, color = color.red, style = plot.style_linebr)
+plot(strategy.position_size < 0 and NO_TARGET_STOPLOSS_SHORT ? tgt_short : na, color = color.green, style = plot.style_linebr)
+
+
+
+
+
+
+

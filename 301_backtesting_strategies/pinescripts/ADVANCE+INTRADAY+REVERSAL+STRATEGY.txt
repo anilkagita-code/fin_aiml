@@ -1,0 +1,82 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Dynamictradingstrategies
+
+//@version=5
+strategy("ADVANCE INTRADAY REVERSAL STRATEGY", overlay = true)
+
+////// LONG ONLY AND SHORT ONLY 
+
+LONGONLY = input.bool(true, "LONG ?", group = "LONG ONLY & SHORT ONLY", inline = "1")
+SHORTONLY = input.bool(true, "SHORT ?",group = "LONG ONLY & SHORT ONLY", inline = "1")
+
+
+////// USER INPUTS 
+
+EMA_l = input.int(defval = 5,title = "EMA LENGTH")
+
+
+LONGSTOP = input.float(defval = 0.2, title = "STOPLOSS FOR LONG")
+LONGTGT = input.float(defval = 0.4, title = "TARGET FOR LONG")
+
+SHORTSTOP = input.float(defval = 0.2, title = "STOPLOSS FOR SHORT")
+SHORTTARGET = input.float(defval = 0.4, title = "TARGET FOR SHORT")
+
+SESSION = input.session(defval = "0915-1030")
+SQUAREOFF = input.session(defval = "1445-1500")
+
+/////// TIMING FUNCTIONS 
+
+Insession = time(timeframe.period,SESSION)
+Sqoff = time(timeframe.period,SQUAREOFF)
+
+
+////// TRADING INDICATORS 
+
+EMA = ta.ema(close,EMA_l)
+
+
+///// TARGET & STOPLOSS
+
+
+LONG_TGT = (strategy.position_avg_price * (1+(LONGTGT/100)))  //// 1000 * (1+(0.4/100) = 1004
+LONG_STOP = (strategy.position_avg_price * (1-(LONGSTOP/100)))
+
+
+SHORT_TGT   = (strategy.position_avg_price * (1-(LONGTGT/100)))
+SHORT_STOP  = (strategy.position_avg_price * (1+(LONGSTOP/100)))
+
+////// BUY AND SHORT SIGNALS 
+
+buy = (high < EMA and close > open) and Insession
+short = (low > EMA and close < open) and Insession
+
+
+////// STRATEGY 
+
+if LONGONLY
+    if buy 
+        strategy.entry("long", direction = strategy.long, comment = "BUY")
+
+    if strategy.position_size > 0
+        strategy.exit("long", from_entry = "long", stop = LONG_STOP, limit = LONG_TGT, comment_loss = "LOSS", comment_profit = "PROFIT" )
+
+if SHORTONLY
+    if short 
+        strategy.entry("short", direction = strategy.short, comment = "SHORT")
+
+    if strategy.position_size < 0
+        strategy.exit("short", from_entry = "short", stop = SHORT_STOP, limit = SHORT_TGT, comment_loss = "LOSS", comment_profit = "PROFIT" )
+
+if Sqoff
+    strategy.close_all("SQOFF")
+
+
+////// PLOT TARGET AND STOPLOSS
+
+plot(strategy.position_size > 0 ? LONG_TGT : na, color = color.green, linewidth = 2, style = plot.style_linebr )
+plot(strategy.position_size > 0 ? LONG_STOP : na, color = color.red, linewidth = 2, style = plot.style_linebr )
+
+plot(strategy.position_size < 0 ? SHORT_TGT : na, color = color.green, linewidth = 2, style = plot.style_linebr )
+plot(strategy.position_size < 0 ? SHORT_STOP : na, color = color.red, linewidth = 2, style = plot.style_linebr )
+
+plot(EMA, linewidth = 2)

@@ -1,0 +1,42 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Dynamictradingstrategies
+
+//@version=5
+indicator("RSI MEAN REVERSION INDICATOR", overlay = true)
+
+//// USER INPUTS 
+
+RSI_L = input.int(defval = 2, minval = 2,maxval = 4, step = 1, title = "RSI LENGTH")
+OB = input.int(defval = 90, minval = 5,maxval = 100, step = 5, title = "OB")
+OS = input.int(defval = 10, minval = 5,maxval = 100, step = 5, title = "OS")
+
+EMA_L = input.int(defval = 200, minval = 1,maxval = 200, step = 1, title = "EMA LENGTH")
+
+
+//// TRADING INDICATORS 
+
+RSI = ta.rsi(close,RSI_L)
+EMA = ta.ema(close,EMA_L)
+
+
+
+///////// BUY AND SHORT SIGNALS 
+
+buy = close > EMA and ta.crossover(RSI,OS)
+short = close < EMA and ta.crossunder(RSI,OB)
+
+
+/////// PLOT BUY AND SHORT SIGNALS 
+
+plotshape(buy,title = "BUY", color = color.green,location = location.belowbar, style = shape.triangleup, size = size.small)
+plotshape(short,title = "SHORT", color = color.red,location = location.abovebar, style = shape.triangledown,size = size.small)
+
+
+////// ALERTS
+
+if buy
+    alert("LONG", alert.freq_once_per_bar_close)
+
+if short
+    alert("SHORT", alert.freq_once_per_bar_close)
+

@@ -1,0 +1,58 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Dynamictradingstrategies
+
+//@version=5
+indicator("MOVING AVERAGE + PINBAR TRADING SETUP", overlay = true)
+
+/// USER INPUTS 
+
+EMA_L = input.int(defval = 13, title = "EMA LENGTH")
+ATR_L = input.int(defval = 14, title = "ATR LENGTH")
+
+
+///NORMAL OR EXACT PINBAR 
+
+PINBAR = input.bool(defval = true, title = "PINBAR")
+
+//// TRADING INDICATOR
+
+EMA = ta.ema(close,EMA_L)
+ATR = ta.atr(ATR_L)
+
+////  PINBAR TRADING SETUP
+
+PINBAR_S = (math.abs(high-open) > math.abs(close-open)*4) and (math.abs(low - close) < math.abs(high-open))
+          and close < open and open < (high+low)/2
+
+
+PINBAR_B = (math.abs(low-open) > math.abs(close-open)*4 ) and math.abs(high-close) < math.abs(low-open)
+          and close > open and open > (high+low)/2
+
+
+
+//////// COMMON PINBAR SETUP 
+
+common_pinbar_b = low < EMA and close > EMA and open > EMA and close > open  and (high-low) < ATR
+common_pinbar_s = high > EMA and close < EMA and open < EMA and close < open and (high-low) < ATR
+
+
+
+//// BUY AND SHORT SIGNALS 
+
+BUY_EXACT_PINBAR = PINBAR_B and low < EMA and close > EMA and open > EMA
+SHORT_EXACT_PINBAR = PINBAR_S and high > EMA and close < EMA and open < EMA
+
+
+
+/// PLOT BUY AND SHORT SIGNALS 
+
+plotshape(PINBAR ? BUY_EXACT_PINBAR : common_pinbar_b, color = color.green, style = shape.triangleup,
+          location = location.belowbar, size = size.small )
+
+plotshape(PINBAR ? SHORT_EXACT_PINBAR : common_pinbar_s, color = color.red, style = shape.triangledown,
+          location = location.abovebar, size = size.small )
+
+
+/// PLOT EMA 
+
+plot(EMA, color =EMA > EMA[1] ? color.green : color.red, linewidth = 2)

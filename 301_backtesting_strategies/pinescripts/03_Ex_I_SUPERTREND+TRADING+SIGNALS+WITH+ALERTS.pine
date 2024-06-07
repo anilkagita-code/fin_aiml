@@ -1,0 +1,47 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Dynamictradingstrategies
+
+//@version=5
+indicator("SUPERTREND BUY & SHORT SIGNALS - W ALERTS", overlay = true)
+
+//// USER INPUTS 
+
+ATR_L = input.int(defval = 10, minval = 1, maxval = 100, step = 1)
+FACTOR = input.float(defval = 3, minval = 0.5, maxval = 5, step = 0.1)
+
+
+///// SUPERTREND INDICATOR 
+
+[supertrend, direction] = ta.supertrend(FACTOR, ATR_L)
+
+
+//// BUY AND SHORT SIGNALS 
+
+buy =   direction == -1 and direction[1] == 1             //ta.crossover(close,supertrend)
+short = direction == 1 and direction[1] == -1             //ta.crossunder(close,supertrend)
+
+///// PLOTSHAPE
+
+plotshape(buy, title = "BUY", style = shape.triangleup,location = location.belowbar, color = color.green, size = size.small)
+plotshape(short, title = "SHORT", style = shape.triangledown,location = location.abovebar, color = color.red,size = size.small)
+
+
+
+///// PLOT SUPERTREND INDICATOR 
+
+a = plot(close, display = display.none)
+
+b = plot(direction == -1 ? supertrend : na, color = color.green, style = plot.style_linebr)
+c = plot(direction == 1 ? supertrend : na, color = color.red, style = plot.style_linebr)
+
+fill(a,b, color = color.new(color.green,90))
+fill(a,c, color = color.new(color.red,90))
+
+
+//// ALERTS 
+
+if buy
+    alert("BUY", alert.freq_once_per_bar_close)
+
+if short
+    alert("SHORT", alert.freq_once_per_bar_close)

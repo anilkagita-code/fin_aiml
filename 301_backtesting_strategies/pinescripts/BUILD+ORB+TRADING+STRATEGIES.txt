@@ -1,0 +1,103 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Dynamictradingstrategies
+
+//@version=5
+strategy("BUILD ORB TRADING STRATEGIES", overlay = true)
+
+//// USER INPUT
+
+len = input.int(14, minval=1, title="DI Length", group = "DMI SETTINGS", inline = "1")
+lensig = input.int(14, title="ADX Smoothing", minval=1, maxval=50, group = "DMI SETTINGS", inline = "1")
+ADX_LEVEL = input.int(25, title="ADX LEVEL", minval=1, maxval=50, group = "DMI SETTINGS", inline = "1")
+//// LONG ONLY AND SHORT ONLY 
+
+LONGONLY  = input.bool(false,"LONG ONLY", group = "LONG & SHORT ONLY SETTINGS", inline = "1")
+SHORTONLY = input.bool(false,"SHORT ONLY", group = "LONG & SHORT ONLY SETTINGS", inline = "1")
+
+//// TIMING 
+
+SESSION = input.session(defval = "0915-1445", group = "TIMING SETTINGS", inline = "1")
+SQUAREOFF = input.session(defval = "1445-1500", group = "TIMING SETTINGS", inline = "1")
+
+
+///// ADX FILTER USER INPUT
+
+indicatoroption1 = input.bool(false,"DO YOU WANT TO USE ADX FILTER ?",group = "DMI SETTINGS", inline = "1")
+
+
+//// RISK MANAGEMENT INTRADAY SETTINFS 
+
+MAX_LOSS = input.int(defval = 30000,title =  " MAX LOSS", group = "RISK MANAGEMENT SETTINGS", inline = "1")
+MAX_ORDERS = input.int(defval = 2, title = " MAX ORDERS", group = "RISK MANAGEMENT SETTINGS", step = 2,inline = "1")
+
+/////// TARGET OPTION 
+
+LONGTARGET  = input.float(defval = 0.5, title="TARGET FOR LONG",group = "TARGET SETTINGS", inline = "1")
+SHORTTARGET = input.float(defval = 0.5, title="TARGET FOR SHORT",group = "TARGET SETTINGS", inline = "1")
+
+TARGET_FOR_LONG = input.bool(false,"LONG TARGET ? ",group = "TARGET SETTINGS", inline = "2")
+TARGET_FOR_SHORT = input.bool(false,"SHORT TARGET ?",group = "TARGET SETTINGS", inline = "2")
+
+
+
+/////////// 
+
+Insession = time(timeframe.period,SESSION)
+Sqoff  = time(timeframe.period,SQUAREOFF)
+
+
+/////// TRADING INDICATOR 
+
+FIRST_BAR = session.isfirstbar
+
+ORB_HIGH = ta.valuewhen(FIRST_BAR,high,0)
+ORB_LOW = ta.valuewhen(FIRST_BAR,low,0)
+
+[diplus, diminus, adx] = ta.dmi(len, lensig)
+
+ADX_FIL = not indicatoroption1 or adx < ADX_LEVEL 
+
+TL = (strategy.position_avg_price * (1+(LONGTARGET/100)))
+TS = (strategy.position_avg_price * (1-(SHORTTARGET/100)))
+
+
+
+//// BUY AND SHORT SIGNALS 
+
+buy = ta.crossover(close,ORB_HIGH) and Insession and ADX_FIL
+short = ta.crossunder(close,ORB_LOW) and Insession and ADX_FIL
+
+
+//// RISK MANAGEMENT 
+
+strategy.risk.max_intraday_filled_orders(MAX_ORDERS)
+strategy.risk.max_intraday_loss(MAX_LOSS,strategy.cash)
+
+
+///// STRATEGY FUNCTIONS 
+
+if LONGONLY
+    if buy
+        strategy.entry("long", direction = strategy.long, comment = "LONG")
+
+    if strategy.position_size > 0 and TARGET_FOR_LONG
+        strategy.exit("long", from_entry = "long", limit = TL, comment_profit = "PROFIT")
+
+if SHORTONLY
+    if short
+        strategy.entry("short", direction = strategy.short, comment = "SHORT")
+
+    if strategy.position_size < 0 and TARGET_FOR_SHORT 
+        strategy.exit("short", from_entry = "short", limit = TS, comment_profit = "PROFIT")
+
+
+if Sqoff
+    strategy.close_all("SQOFF")
+
+//////// PLOT ORB HIGH & LOW
+
+plot(ORB_HIGH, color = color.green, style = plot.style_circles, linewidth = 2)
+plot(ORB_LOW, color = color.red, style = plot.style_circles, linewidth = 2)
+
+plot(strategy.position_size > 0 and TARGET_FOR_LONG ? TL : na, style = plot.style_linebr, color = color.green)
+plot(strategy.position_size < 0 and TARGET_FOR_SHORT ? TS : na, style = plot.style_linebr, color = color.green)
