@@ -1,0 +1,44 @@
+# conda env update --file environment.yml --prune
+name: fin-ml
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - numpy
+  - pandas
+  - pip
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - scipy
+  - statsmodels
+  - jupyterlab
+  - notebook  
+  - plotly
+  - tensorflow
+  - ipykernel
+  - requests
+  - beautifulsoup4
+  - lxml
+  - sqlalchemy
+  - openpyxl
+  - plotly
+  - pip:
+      - streamlit
+      - yfinance # Yahoo Finance API: For fetching historical market data, Financial Statements, financial news, Dividends and Splits and other stock-related information.
+      - nselib # nselib has financial data and historical market data APIs for Python
+      - nsepython # good library for returns computation etc
+      - ta-lib
+      - fbprophet
+      - fyers-apiv3
+      - alpha_vantage
+      - quandl
+      - investpy
+      - pandas_datareader
+      - mlxtend
+      - dhanhq
+      - yahoofinancials # News and Headlines: Easy to find news articles and Headlines based on specific stocks and financial issues, which helps in sentiment analysis of the market.
+      - pyarrow
+      - fastparquet
+      - duckdb

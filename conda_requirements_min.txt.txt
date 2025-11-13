@@ -1,0 +1,17 @@
+# conda_requirements.txt
+numpy
+pandas
+scipy
+matplotlib
+seaborn
+scikit-learn
+jupyterlab
+notebook
+ipykernel
+requests
+beautifulsoup4
+lxml
+sqlalchemy
+openpyxl
+plotly
+tensorflow
