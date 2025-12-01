@@ -1,2 +1,4 @@
-fin-ml/
-credentials.py
+# Ignore credentials in specific folders
+001_setup_pulldata/credentials.py
+001_setup_pulldata/fyers_token.txt
+001_setup_pulldata/fyers_appid.txt
